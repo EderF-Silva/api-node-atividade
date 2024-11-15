@@ -33,7 +33,7 @@ Além disso, é necessário escrever **testes** para ambos os endpoints, garanti
 Primeiro, clone o repositório do projeto:
 
 ```bash
-git clone https://github.com/CampossCaio/puc-minas-node.git
+git clone https://github.com/CampossCaio/puc-minas.git
 cd puc-minas/nodejs/classes/api-rest-nodejs
 ```
 ### 2. Instalar as Dependências
@@ -51,6 +51,14 @@ yarn install
 Esses comandos irão baixar todas as dependências listadas no arquivo package.json do projeto.
 
 ### 3. Rodar as Migrations
+
+Antes de rodar o comando para criar as migrations, é importante criar os arquivos `.env` e `.env.test` e adicionar as variáveis de exemplo contidas nos arquivos `.env.example` e  `.env.test.example`.
+
+```
+NODE_ENV=development
+DATABASE_URL='./db/db.sqlite'
+DATABASE_CLIENT=sqlite
+```
 
 Usando **npm**:
 
