@@ -77,7 +77,7 @@ Isso irá executar as migrações e criar as tabelas necessárias no banco de da
 Usando **npm**:
 
 ```bash
-npm dev
+npm run dev
 ```
 Usando **yarn**:
 
