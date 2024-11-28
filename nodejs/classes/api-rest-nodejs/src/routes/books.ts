@@ -2,7 +2,6 @@ import { FastifyInstance } from 'fastify';
 import { knex } from '../db';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
-import { checkSessionId } from '../middlewares/check-session-id';
 
 // http
 
@@ -20,12 +19,12 @@ export async function booksRouter(app: FastifyInstance) {
   app.get(
     '/',
     {
-      preHandler: [checkSessionId],
+      preHandler: [app.authenticate],
     },
     async (request) => {
-      const { sessionId } = request.cookies;
+      const { id } = request.user;
 
-      const books = await knex('books').where('session_id', sessionId).select();
+      const books = await knex('books').where('user_id', id).select();
 
       return { books };
     },
@@ -34,10 +33,10 @@ export async function booksRouter(app: FastifyInstance) {
   app.get(
     '/:id',
     {
-      preHandler: [checkSessionId],
+      preHandler: [app.authenticate],
     },
     async (request) => {
-      const { sessionId } = request.cookies;
+      const { id: user_id } = request.user;
 
       const getBookParamsSchema = z.object({
         id: z.string().uuid(),
@@ -48,7 +47,7 @@ export async function booksRouter(app: FastifyInstance) {
       const book = await knex('books')
         .where({
           id,
-          session_id: sessionId,
+          user_id,
         })
         .first();
 
@@ -56,41 +55,39 @@ export async function booksRouter(app: FastifyInstance) {
     },
   );
 
-  app.post('/', async (request, reply) => {
-    const createBookBodySchema = z.object({
-      title: z.string(),
-      genrer: z.string(),
-      author: z.string(),
-    });
-
-    const { title, author, genrer } = createBookBodySchema.parse(request.body);
-
-    let sessionId = request.cookies.sessionId;
-
-    if (!sessionId) {
-      sessionId = randomUUID();
-      reply.cookie('sessionId', sessionId, {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7, //7 days
+  app.post(
+    '/',
+    {
+      preHandler: [app.authenticate],
+    },
+    async (request, reply) => {
+      const createBookBodySchema = z.object({
+        title: z.string(),
+        genrer: z.string(),
+        author: z.string(),
       });
-    }
 
-    await knex('books').insert({
-      id: randomUUID(),
-      title,
-      author,
-      genrer,
-      session_id: sessionId as string,
-    });
+      const { title, author, genrer } = createBookBodySchema.parse(
+        request.body,
+      );
 
-    return reply.status(201).send();
-  });
+      await knex('books').insert({
+        id: randomUUID(),
+        title,
+        author,
+        genrer,
+        user_id: request.user.id,
+      });
+
+      return reply.status(201).send();
+    },
+  );
 
   app.put('/:id', () => {
     // Implement PUT route for updating a book
   });
 
   app.delete('/:id', () => {
-    // Implement DELETE route for deleting a book
+    // Implement PUT route for updating a book
   });
 }

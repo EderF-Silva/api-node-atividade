@@ -10,6 +10,14 @@ declare module 'knex/types/tables' {
       genrer: string;
       created_at: Date;
       session_id?: string;
+      user_id: string;
+    };
+    users: {
+      id: string;
+      name: string;
+      email: string;
+      password: string;
+      created_at: Date;
     };
   }
 }
