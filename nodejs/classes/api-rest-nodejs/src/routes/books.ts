@@ -83,11 +83,71 @@ export async function booksRouter(app: FastifyInstance) {
     },
   );
 
-  app.put('/:id', () => {
-    // Implement PUT route for updating a book
-  });
 
-  app.delete('/:id', () => {
-    // Implement PUT route for updating a book
-  });
+  app.put(
+    '/:id',
+    {
+      preHandler: [app.authenticate],
+    },
+    async (request, reply) => {
+      const { id: user_id } = request.user;
+
+      const updateBookParamsSchema = z.object({
+        id: z.string().uuid(),
+      });
+
+      const updateBookBodySchema = z.object({
+        title: z.string().optional(),
+        genrer: z.string().optional(),
+        author: z.string().optional(),
+      });
+
+      const { id } = updateBookParamsSchema.parse(request.params);
+      const updateData = updateBookBodySchema.parse(request.body);
+
+      const updatedRows = await knex('books')
+        .where({
+          id,
+          user_id,
+        })
+        .update(updateData);
+
+      if (updatedRows === 0) {
+        return reply.status(404).send({ error: 'Livro não encontrado ou não autorizado' });
+      }
+
+      return reply.status(204).send({ message: 'Livro Atualizado' });
+    },
+  );
+
+  app.delete(
+    '/:id',
+    {
+      preHandler: [app.authenticate],
+    },
+    async (request, reply) => {
+      const { id: user_id } = request.user;
+
+      const deleteBookParamsSchema = z.object({
+        id: z.string().uuid(),
+      });
+
+      const { id } = deleteBookParamsSchema.parse(request.params);
+
+      const deletedRows = await knex('books')
+        .where({
+          id,
+          user_id,
+        })
+        .delete();
+
+      if (deletedRows === 0) {
+        return reply.status(404).send({ error: 'Livro não encontrado ou não autorizado' });
+      }
+
+      return reply.status(204).send({ message: 'Livro Removido' });
+    },
+  );
+
+
 }
